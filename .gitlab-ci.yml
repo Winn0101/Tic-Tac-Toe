@@ -1,4 +1,3 @@
-# GitLab CI/CD Pipeline for Tic-Tac-Toe Game (no security scan)
 image: docker:latest
 
 services:
@@ -35,14 +34,13 @@ test:
   except:
     - main
 
-     https://docs.docker.com/go/credential-store/
-
+# Build and push to GitLab registry
 build:
   stage: build
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "Building Docker image..."
+    - echo "Building and pushing Docker image to GitLab registry..."
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker build -t $CI_REGISTRY_IMAGE:latest .
@@ -62,27 +60,10 @@ push-to-docker-hub:
     - echo "Pushing image to Docker Hub..."
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA
     - docker tag $CI_REGISTRY_IMAGE:latest $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA
     - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
     - echo "Image pushed successfully!"
-  dependencies:
-    - build
-  only:
-    - main
-    - develop
-    
-# Push to GitLab Container Registry
-push-to-gitlab-registry:
-  stage: push
-  before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  script:
-    - echo "Pushing image to GitLab Container Registry..."
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY_IMAGE:latest
-    - echo "Image pushed to GitLab registry successfully!"
   dependencies:
     - build
   only:
