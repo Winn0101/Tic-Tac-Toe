@@ -118,7 +118,7 @@ deploy-staging:
     - apk add --no-cache curl
   script:
     - echo "Deploying to staging environment..."
-    - echo "Image: $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
+    - echo "$DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
     - echo "You can now pull this image and deploy to your AWS EC2/ECS/Amplify"
     - |
       echo "Docker run command:"
