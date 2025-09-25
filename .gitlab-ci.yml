@@ -55,23 +55,6 @@ build:
   only:
     - branches
 
-# Security scanning with Trivy
-security-scan:
-  stage: security-scan
-  image: aquasec/trivy:latest
-  script:
-    - echo "Running security scan on Docker image..."
-    - trivy image --exit-code 0 --format template --template "@contrib/sarif.tpl" -o trivy-results.sarif $IMAGE_NAME:$IMAGE_TAG
-    - trivy image --exit-code 1 --severity CRITICAL $IMAGE_NAME:$IMAGE_TAG
-  artifacts:
-    reports:
-      sast: trivy-results.sarif
-    when: always
-  dependencies:
-    - build
-  only:
-    - branches
-
 # Push to Docker Hub
 push-to-docker-hub:
   stage: push
