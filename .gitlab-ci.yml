@@ -7,7 +7,8 @@ services:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
-
+  IMAGE_NAME: $CI_REGISTRY_USER/tic-tac-toe-game
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
 stages:
   - test
@@ -42,29 +43,17 @@ test:
 build:
   stage: build
   before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - echo "Building Docker image..."
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
-    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker build -t $IMAGE_NAME:latest .
     - echo "Docker image built successfully!"
   artifacts:
     reports:
       dotenv: build.env
   only:
     - branches
-
-# Security scanning with Trivy
-#security-scan:
-#  stage: security-scan
- # image: aquasec/trivy:latest
- # script:
- #   - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
-#    - echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
- #   - echo "About to run: trivy image nginx:alpine"
-  #  - trivy image nginx:alpine
-  #only:
-   # - branches
 
 # Push to Docker Hub
 push-to-docker-hub:
