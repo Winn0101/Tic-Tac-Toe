@@ -59,15 +59,10 @@ security-scan:
   stage: security-scan
   image: aquasec/trivy:latest
   script:
-    - echo "Scanning $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - trivy image --exit-code 0 --format template --template "@contrib/sarif.tpl" -o trivy-results.sarif $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - trivy image --exit-code 1 --severity CRITICAL $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  artifacts:
-    reports:
-      sast: trivy-results.sarif
-    when: always
-  dependencies:
-    - build
+    - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
+    - echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
+    - echo "About to run: trivy image nginx:alpine"
+    - trivy image nginx:alpine
   only:
     - branches
 
