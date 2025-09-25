@@ -31,8 +31,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # ... (previous lines)
 
-# Create nginx group and user (security best practice)
-RUN adduser -S -u 101 -D -H -h /var/cache/nginx -s /sbin/nologin nginx
+# Create a new user with UID 101, no password, no home directory, and a non-login shell
+RUN adduser -D -u 101 -h /var/cache/nginx -s /sbin/nologin nginx
 
 # Set proper permissions for nginx files
 RUN chown -R nginx:nginx /usr/share/nginx/html \
