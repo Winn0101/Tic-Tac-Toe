@@ -35,12 +35,14 @@ test:
   except:
     - main
 
+     https://docs.docker.com/go/credential-store/
+
 build:
   stage: build
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "Building and pushing Docker image..."
+    - echo "Building Docker image..."
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker build -t $CI_REGISTRY_IMAGE:latest .
@@ -54,6 +56,8 @@ push-to-docker-hub:
   stage: push
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker pull $CI_REGISTRY_IMAGE:latest
   script:
     - echo "Pushing image to Docker Hub..."
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA
@@ -66,7 +70,7 @@ push-to-docker-hub:
   only:
     - main
     - develop
-
+    
 # Push to GitLab Container Registry
 push-to-gitlab-registry:
   stage: push
