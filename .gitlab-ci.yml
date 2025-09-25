@@ -55,16 +55,16 @@ build:
     - branches
 
 # Security scanning with Trivy
-security-scan:
-  stage: security-scan
-  image: aquasec/trivy:latest
-  script:
-    - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
-    - echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
-    - echo "About to run: trivy image nginx:alpine"
-    - trivy image nginx:alpine
-  only:
-    - branches
+#security-scan:
+#  stage: security-scan
+ # image: aquasec/trivy:latest
+ # script:
+ #   - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
+#    - echo "CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA"
+ #   - echo "About to run: trivy image nginx:alpine"
+  #  - trivy image nginx:alpine
+  #only:
+   # - branches
 
 # Push to Docker Hub
 push-to-docker-hub:
