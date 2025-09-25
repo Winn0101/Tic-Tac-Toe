@@ -118,7 +118,7 @@ deploy-staging:
     - apk add --no-cache curl
   script:
     - echo "Deploying to staging environment..."
-    - echo "Image: $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
+    - echo "$DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
     - echo "You can now pull this image and deploy to your AWS EC2/ECS/Amplify"
     - |
       echo "Docker run command:"
@@ -131,27 +131,3 @@ deploy-staging:
   only:
     - main
   when: manual
-
-# Cleanup job
-cleanup:
-  stage: deploy
-  script:
-    - docker system prune -af
-  when: always
-  dependencies:
-    - build "Running basic HTML validation tests..."
-    - |
-      # Check if required files exist
-      if [ ! -f "index.html" ]; then
-        echo "Error: index.html not found"
-        exit 1
-      fi
-      if [ ! -f "styles.css" ]; then
-        echo "Error: styles.css not found"
-        exit 1
-      fi
-      if [ ! -f "script.js" ]; then
-        echo "Error: script.js not found"
-        exit 1
-      fi
-    - echo
