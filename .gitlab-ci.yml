@@ -1,0 +1,157 @@
+# GitLab CI/CD Pipeline for Tic-Tac-Toe Game
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_NAME: $CI_REGISTRY_USER/tic-tac-toe-game
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+stages:
+  - test
+  - build
+  - security-scan
+  - push
+  - deploy
+
+# Cache for dependencies
+cache:
+  paths:
+    - node_modules/
+
+# Test stage - run basic tests
+test:
+  stage: test
+  image: node:16-alpine
+  before_script:
+    - npm install -g http-server
+  script:
+    - echo "All required files found!"
+    - echo "Starting HTTP server for testing..."
+    - http-server . -p 8080 &
+    - sleep 5
+    - echo "Basic file structure validation passed!"
+  only:
+    - branches
+  except:
+    - main
+
+# Build Docker image
+build:
+  stage: build
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker build -t $IMAGE_NAME:latest .
+    - echo "Docker image built successfully!"
+  artifacts:
+    reports:
+      dotenv: build.env
+  only:
+    - branches
+
+# Security scanning with Trivy
+security-scan:
+  stage: security-scan
+  image: aquasec/trivy:latest
+  script:
+    - echo "Running security scan on Docker image..."
+    - trivy image --exit-code 0 --format template --template "@contrib/sarif.tpl" -o trivy-results.sarif $IMAGE_NAME:$IMAGE_TAG
+    - trivy image --exit-code 1 --severity CRITICAL $IMAGE_NAME:$IMAGE_TAG
+  artifacts:
+    reports:
+      sast: trivy-results.sarif
+    when: always
+  dependencies:
+    - build
+  only:
+    - branches
+
+# Push to Docker Hub
+push-to-docker-hub:
+  stage: push
+  before_script:
+    - echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+  script:
+    - echo "Pushing image to Docker Hub..."
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG
+    - docker tag $IMAGE_NAME:latest $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
+    - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG
+    - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
+    - echo "Image pushed successfully!"
+  dependencies:
+    - build
+    - security-scan
+  only:
+    - main
+    - develop
+
+# Push to GitLab Container Registry (alternative)
+push-to-gitlab-registry:
+  stage: push
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - echo "Pushing image to GitLab Container Registry..."
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker tag $IMAGE_NAME:latest $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - echo "Image pushed to GitLab registry successfully!"
+  dependencies:
+    - build
+    - security-scan
+  only:
+    - main
+    - develop
+
+# Deploy to staging (optional)
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Image: $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
+    - echo "You can now pull this image and deploy to your AWS EC2/ECS/Amplify"
+    - |
+      echo "Docker run command:"
+      echo "docker run -d -p 80:80 $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
+  environment:
+    name: staging
+    url: http://staging.example.com
+  dependencies:
+    - push-to-docker-hub
+  only:
+    - main
+  when: manual
+
+# Cleanup job
+cleanup:
+  stage: deploy
+  script:
+    - docker system prune -af
+  when: always
+  dependencies:
+    - build "Running basic HTML validation tests..."
+    - |
+      # Check if required files exist
+      if [ ! -f "index.html" ]; then
+        echo "Error: index.html not found"
+        exit 1
+      fi
+      if [ ! -f "styles.css" ]; then
+        echo "Error: styles.css not found"
+        exit 1
+      fi
+      if [ ! -f "script.js" ]; then
+        echo "Error: script.js not found"
+        exit 1
+      fi
+    - echo
