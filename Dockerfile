@@ -31,10 +31,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # ... (previous lines)
 
-# Create nginx user and set permissions (security best practice)
-RUN apk add --no-cache shadow \
-    && addgroup -g 101 -S nginx \
-    && adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -g nginx nginx
+# Create nginx group and user (security best practice)
+RUN addgroup -S -g 101 nginx \
+    && adduser -S -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx nginx
 
 # Set proper permissions for nginx files
 RUN chown -R nginx:nginx /usr/share/nginx/html \
