@@ -131,27 +131,3 @@ deploy-staging:
   only:
     - main
   when: manual
-
-# Cleanup job
-cleanup:
-  stage: deploy
-  script:
-    - docker system prune -af
-  when: always
-  dependencies:
-    - build "Running basic HTML validation tests..."
-    - |
-      # Check if required files exist
-      if [ ! -f "index.html" ]; then
-        echo "Error: index.html not found"
-        exit 1
-      fi
-      if [ ! -f "styles.css" ]; then
-        echo "Error: styles.css not found"
-        exit 1
-      fi
-      if [ ! -f "script.js" ]; then
-        echo "Error: script.js not found"
-        exit 1
-      fi
-    - echo
