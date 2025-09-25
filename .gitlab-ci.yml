@@ -43,7 +43,7 @@ test:
 build:
   stage: build
   before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin
+  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - echo "Building Docker image..."
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
@@ -76,7 +76,7 @@ security-scan:
 push-to-docker-hub:
   stage: push
   before_script:
-    - echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - echo "Pushing image to Docker Hub..."
     - docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG
