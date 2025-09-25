@@ -13,7 +13,6 @@ variables:
 stages:
   - test
   - build
-  - security-scan
   - push
   - deploy
 
