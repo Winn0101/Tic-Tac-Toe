@@ -29,8 +29,11 @@ COPY service-worker.js /usr/share/nginx/html/
 # Copy custom nginx configuration for better performance and security
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# ... (previous lines)
+
 # Create nginx user and set permissions (security best practice)
-RUN addgroup -g 101 -S nginx \
+RUN apk add --no-cache shadow \
+    && addgroup -g 101 -S nginx \
     && adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
 
 # Set proper permissions for nginx files
