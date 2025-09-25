@@ -32,7 +32,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # ... (previous lines)
 
 # Create a new user with UID 101, no password, no home directory, and a non-login shell
-RUN adduser -D -s /sbin/nologin nginx
+RUN adduser -D -s /usr/sbin/nologin nginx
 
 # Set proper permissions for nginx files
 RUN chown -R nginx:nginx /usr/share/nginx/html \
