@@ -35,19 +35,17 @@ test:
   except:
     - main
 
-# Build Docker image
 build:
   stage: build
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "Building Docker image..."
+    - echo "Building and pushing Docker image..."
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker build -t $CI_REGISTRY_IMAGE:latest .
-    - echo "Docker image built successfully!"
-  artifacts:
-    reports:
-      dotenv: build.env
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - echo "Docker image built and pushed successfully!"
   only:
     - branches
 
