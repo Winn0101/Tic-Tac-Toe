@@ -68,7 +68,6 @@ push-to-docker-hub:
     - echo "Image pushed successfully!"
   dependencies:
     - build
-    - security-scan
   only:
     - main
     - develop
@@ -87,7 +86,6 @@ push-to-gitlab-registry:
     - echo "Image pushed to GitLab registry successfully!"
   dependencies:
     - build
-    - security-scan
   only:
     - main
     - develop
