@@ -29,6 +29,15 @@ body {
     z-index: 10;
 }
 
+.logo {
+    color: #fff;
+    font-size: 0.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    letter-spacing: 1.5px;
+}
+
 .title {
     color: #fff;
     font-size: 3rem;
