@@ -1,4 +1,3 @@
-# GitLab CI/CD Pipeline for Tic-Tac-Toe Game
 image: docker:latest
 
 services:
@@ -7,22 +6,18 @@ services:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
-  IMAGE_NAME: $CI_REGISTRY_USER/tic-tac-toe-game
-  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
 stages:
   - test
   - build
-  - security-scan
   - push
   - deploy
 
-# Cache for dependencies
 cache:
   paths:
     - node_modules/
 
-# Test stage - run basic tests
+# Test stage
 test:
   stage: test
   image: node:16-alpine
@@ -39,19 +34,18 @@ test:
   except:
     - main
 
-# Build Docker image
+# Build and push to GitLab registry
 build:
   stage: build
   before_script:
-  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    - echo "Building Docker image..."
-    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-    - docker build -t $IMAGE_NAME:latest .
-    - echo "Docker image built successfully!"
-  artifacts:
-    reports:
-      dotenv: build.env
+    - echo "Building and pushing Docker image to GitLab registry..."
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - echo "Docker image built and pushed successfully!"
   only:
     - branches
 
@@ -59,36 +53,19 @@ build:
 push-to-docker-hub:
   stage: push
   before_script:
-  - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker pull $CI_REGISTRY_IMAGE:latest
   script:
     - echo "Pushing image to Docker Hub..."
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG
-    - docker tag $IMAGE_NAME:latest $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
-    - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:latest $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+    - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA
     - docker push $DOCKER_HUB_USERNAME/tic-tac-toe-game:latest
     - echo "Image pushed successfully!"
   dependencies:
     - build
-    - security-scan
-  only:
-    - main
-    - develop
-
-# Push to GitLab Container Registry (alternative)
-push-to-gitlab-registry:
-  stage: push
-  before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  script:
-    - echo "Pushing image to GitLab Container Registry..."
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG
-    - docker tag $IMAGE_NAME:latest $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
-    - docker push $CI_REGISTRY_IMAGE:latest
-    - echo "Image pushed to GitLab registry successfully!"
-  dependencies:
-    - build
-    - security-scan
   only:
     - main
     - develop
@@ -101,11 +78,10 @@ deploy-staging:
     - apk add --no-cache curl
   script:
     - echo "Deploying to staging environment..."
-    - echo "$DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
-    - echo "You can now pull this image and deploy to your AWS EC2/ECS/Amplify"
+    - echo "$DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA"
     - |
       echo "Docker run command:"
-      echo "docker run -d -p 80:80 $DOCKER_HUB_USERNAME/tic-tac-toe-game:$IMAGE_TAG"
+      echo "docker run -d -p 80:80 $DOCKER_HUB_USERNAME/tic-tac-toe-game:$CI_COMMIT_SHORT_SHA"
   environment:
     name: staging
     url: http://staging.example.com
