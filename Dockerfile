@@ -23,7 +23,7 @@ RUN chown -R nginx:nginx /usr/share/nginx/html \
 RUN mkdir -p /var/run/nginx \
     && chown -R nginx:nginx /var/run/nginx
 
-USER nginx
+#USER nginx
 
 EXPOSE 80
 
